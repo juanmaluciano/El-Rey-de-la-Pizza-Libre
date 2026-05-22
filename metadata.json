@@ -1,0 +1,6 @@
+{
+  "name": "El Rey Pizza Libre",
+  "description": "Menú interactivo de gustos, sistema de reservas y panel de administración para El Rey Pizza Libre.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
