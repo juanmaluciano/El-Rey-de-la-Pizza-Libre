@@ -472,37 +472,37 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-x-2.5 sm:gap-x-6 gap-y-2 sm:gap-y-3.5">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-7 sm:gap-y-4">
                 
                 {/* COLUMN 1 COMPARTMENT */}
                 <div className="flex flex-col">
                   {/* Category header - enlarged and without "Tradicionales" */}
-                  <div className="flex justify-between items-center py-1.5 px-2 mb-2 rounded bg-zinc-950/45 border-l-2 border-amber-500">
-                    <span className="text-[10px] xs:text-xs sm:text-sm font-serif font-black uppercase text-amber-400 tracking-wide">
+                  <div className="flex justify-between items-center py-2 px-2.5 mb-2.5 rounded bg-zinc-950/45 border-l-3 border-amber-500">
+                    <span className="text-xs xs:text-sm sm:text-sm font-serif font-black uppercase text-amber-400 tracking-wide">
                       Especialidades
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-1 sm:gap-1.5">
+                  <div className="flex flex-col gap-1.5 sm:gap-2">
                     {col1Pizzas.map((pizza) => (
                       <div
                         key={pizza.id}
                         onMouseEnter={() => setHoveredPizza(pizza)}
                         onMouseLeave={() => setHoveredPizza(null)}
-                        className="group flex flex-col py-1.5 px-1.5 sm:px-2 rounded hover:bg-zinc-950/40 transition-all duration-150 border border-transparent hover:border-zinc-800/30 relative cursor-pointer"
+                        className="group flex flex-col py-2 px-2 rounded hover:bg-zinc-950/40 transition-all duration-150 border border-transparent hover:border-zinc-800/30 relative cursor-pointer"
                       >
-                        <div className="flex items-center justify-between gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
                           {/* Pizza Dot Indicator */}
-                          <div className="flex items-center gap-1.5 overflow-hidden">
+                          <div className="flex items-center gap-2 overflow-hidden flex-1">
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 group-hover:bg-red-500 transition-all"></span>
-                            <span className="text-[11.5px] xs:text-[13.5px] sm:text-[15px] md:text-base font-bold text-zinc-100 group-hover:text-white truncate">
+                            <span className="text-base sm:text-sm md:text-[15px] font-bold text-zinc-100 group-hover:text-white break-words">
                               {pizza.name}
                             </span>
                           </div>
                           {/* Dot lines connector */}
-                          <div className="flex-1 border-b border-dotted border-zinc-800/60 mx-1"></div>
+                          <div className="hidden xs:block flex-1 border-b border-dotted border-zinc-800/50 mx-1"></div>
                           {/* Price label */}
-                          <span className="text-xs sm:text-sm font-mono font-black text-amber-450 group-hover:text-amber-450 tracking-tight shrink-0 bg-zinc-950/50 px-1.5 py-0.5 rounded border border-zinc-900 shadow-sm">
+                          <span className="text-sm sm:text-xs md:text-sm font-mono font-black text-amber-450 group-hover:text-amber-400 tracking-tight shrink-0 bg-zinc-950/60 px-2 py-0.5 rounded border border-zinc-900 shadow-sm">
                             {formatCurrency(pizza.defaultPrice)}
                           </span>
                         </div>
@@ -517,32 +517,32 @@ export default function App() {
                 {/* COLUMN 2 COMPARTMENT */}
                 <div className="flex flex-col">
                   {/* Category header - enlarged and without "Tradición" */}
-                  <div className="flex justify-between items-center py-1.5 px-2 mb-2 rounded bg-zinc-950/45 border-l-2 border-red-500">
-                    <span className="text-[10px] xs:text-xs sm:text-sm font-serif font-black uppercase text-red-500 tracking-wide">
+                  <div className="flex justify-between items-center py-2 px-2.5 mb-2.5 rounded bg-zinc-950/45 border-l-3 border-red-500">
+                    <span className="text-xs xs:text-sm sm:text-sm font-serif font-black uppercase text-red-500 tracking-wide">
                       Variedades Gourmet
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-1 sm:gap-1.5">
+                  <div className="flex flex-col gap-1.5 sm:gap-2">
                     {col2Pizzas.map((pizza) => (
                       <div
                         key={pizza.id}
                         onMouseEnter={() => setHoveredPizza(pizza)}
                         onMouseLeave={() => setHoveredPizza(null)}
-                        className="group flex flex-col py-1.5 px-1.5 sm:px-2 rounded hover:bg-zinc-950/40 transition-all duration-150 border border-transparent hover:border-zinc-800/30 relative cursor-pointer"
+                        className="group flex flex-col py-2 px-2 rounded hover:bg-zinc-950/40 transition-all duration-150 border border-transparent hover:border-zinc-800/30 relative cursor-pointer"
                       >
-                        <div className="flex items-center justify-between gap-1.5">
+                        <div className="flex items-center justify-between gap-2">
                           {/* Pizza Dot Indicator */}
-                          <div className="flex items-center gap-1.5 overflow-hidden">
-                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0 group-hover:bg-amber-500 transition-all"></span>
-                            <span className="text-[11.5px] xs:text-[13.5px] sm:text-[15px] md:text-base font-bold text-zinc-100 group-hover:text-white truncate">
+                          <div className="flex items-center gap-2 overflow-hidden flex-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-650 shrink-0 group-hover:bg-amber-500 transition-all"></span>
+                            <span className="text-base sm:text-sm md:text-[15px] font-bold text-zinc-100 group-hover:text-white break-words">
                               {pizza.name}
                             </span>
                           </div>
                           {/* Dot lines connector */}
-                          <div className="flex-1 border-b border-dotted border-zinc-800/60 mx-1"></div>
+                          <div className="hidden xs:block flex-1 border-b border-dotted border-zinc-800/50 mx-1"></div>
                           {/* Price label */}
-                          <span className="text-xs sm:text-sm font-mono font-black text-amber-450 group-hover:text-amber-450 tracking-tight shrink-0 bg-zinc-950/50 px-1.5 py-0.5 rounded border border-zinc-900 shadow-sm">
+                          <span className="text-sm sm:text-xs md:text-sm font-mono font-black text-amber-450 group-hover:text-amber-400 tracking-tight shrink-0 bg-zinc-950/60 px-2 py-0.5 rounded border border-zinc-900 shadow-sm">
                             {formatCurrency(pizza.defaultPrice)}
                           </span>
                         </div>
