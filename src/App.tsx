@@ -72,7 +72,7 @@ const INITIAL_PIZZAS: PizzaItem[] = [
   { id: "choclo", name: "Choclo", column: 2, ingredients: "Muzzarella, granos tiernos de choclo dulce en crema de choclo casera y pizca de nuez moscada.", defaultPrice: 16500 },
   { id: "criolla", name: "Criolla", column: 2, ingredients: "Muzzarella con salsa criolla artesanal (cebolla picada, morrones de dos colores, tomate y oliva).", defaultPrice: 16500 },
   { id: "acelga-salsa-blanca", name: "Acelga con salsa blanca", column: 2, ingredients: "Crema de acelga fresca al vapor ligada en salsa blanca perfumada, y queso provolone rayado.", defaultPrice: 17000 },
-  { id: "champinon", name: "Champinon", column: 2, ingredients: "Muzzarella saborizada con champiñones parís laminados salteados al ajillo y perejil fresco.", defaultPrice: 18850 },
+  { id: "champinon", name: "Champiñón", column: 2, ingredients: "Muzzarella saborizada con champiñones parís laminados salteados al ajillo y perejil fresco.", defaultPrice: 18850 },
   { id: "cancha", name: "Cancha", column: 2, ingredients: "Pizza tradicional sin muzzarella, con base crujiente de salsa de tomate espesa súper sazonada.", defaultPrice: 15000 },
   { id: "provolone", name: "Provolone", column: 2, ingredients: "Muzzarella, rodajas de provolone curado, orégano silvestre y un hilo de aceite de oliva.", defaultPrice: 19500 },
   { id: "rucula", name: "Rucula", column: 2, ingredients: "Muzzarella, hojas de rúcula selvática fresca, láminas de jamón crudo y lluvia de parmesano.", defaultPrice: 19200 },
@@ -95,7 +95,10 @@ export default function App() {
     const saved = localStorage.getItem("rey_pizza_menu_v2");
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          return parsed.map((p: PizzaItem) => p.id === "champinon" ? { ...p, name: "Champiñón" } : p);
+        }
       } catch (e) {
         console.error("Error al cargar pizzas de localStorage, usando por defecto", e);
       }
@@ -148,6 +151,12 @@ export default function App() {
   const [adminSearchQuery, setAdminSearchQuery] = useState("");
   const [adminNotification, setAdminNotification] = useState("");
 
+  // Non-blocking in-app safety confirmation states
+  const [isRestoringPrices, setIsRestoringPrices] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isClearingAllBookings, setIsClearingAllBookings] = useState(false);
+  const [bookingFormError, setBookingFormError] = useState("");
+
   // Logo fallback safety state
   const [logoError, setLogoError] = useState(false);
 
@@ -192,10 +201,11 @@ export default function App() {
   const handleBookingSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName || !formDate || !formTime || !formPhone || formGuests < 1) {
-      alert("Por favor complete todos los campos requeridos.");
+      setBookingFormError("Por favor complete todos los campos requeridos (*).");
       return;
     }
 
+    setBookingFormError("");
     setIsSubmittingBooking(true);
 
     // Simulate clean, serious process delay
@@ -223,6 +233,7 @@ export default function App() {
       setFormDate("");
       setFormTime("");
       setFormPhone("");
+      setBookingFormError("");
     }, 1200);
   };
 
@@ -245,7 +256,7 @@ export default function App() {
 
   // Restore factory prices
   const handleRestoreDefaultPrices = () => {
-    if (confirm("¿Está seguro que desea restaurar todos los precios por defecto?")) {
+    if (isRestoringPrices) {
       setPizzas(INITIAL_PIZZAS);
       setWeekdayPrice(13900);
       setWeekendPrice(14900);
@@ -257,15 +268,41 @@ export default function App() {
       setTempWeekendPrice(14900);
       setAdminNotification("¡Precios por defecto restaurados!");
       setTimeout(() => setAdminNotification(""), 2200);
+      setIsRestoringPrices(false);
+    } else {
+      setIsRestoringPrices(true);
+      setTimeout(() => {
+        setIsRestoringPrices(false);
+      }, 4000);
     }
   };
 
   // Cancel reservation in Admin Panel
   const handleDeleteBooking = (id: string) => {
-    if (confirm("¿Desactivar o cancelar esta reserva?")) {
+    if (deleteConfirmId === id) {
       const updated = bookingList.filter(b => b.id !== id);
       setBookingList(updated);
       localStorage.setItem("rey_pizza_reservas", JSON.stringify(updated));
+      setDeleteConfirmId(null);
+    } else {
+      setDeleteConfirmId(id);
+      setTimeout(() => {
+        setDeleteConfirmId(prev => prev === id ? null : prev);
+      }, 4000);
+    }
+  };
+
+  // Clear all bookings safe handler
+  const handleClearAllBookings = () => {
+    if (isClearingAllBookings) {
+      setBookingList([]);
+      localStorage.setItem("rey_pizza_reservas", JSON.stringify([]));
+      setIsClearingAllBookings(false);
+    } else {
+      setIsClearingAllBookings(true);
+      setTimeout(() => {
+        setIsClearingAllBookings(false);
+      }, 4000);
     }
   };
 
@@ -435,45 +472,40 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <div className="grid grid-cols-2 gap-x-2 sm:gap-x-6 gap-y-1.5 sm:gap-y-4">
+              <div className="grid grid-cols-2 gap-x-2.5 sm:gap-x-6 gap-y-2 sm:gap-y-3.5">
                 
                 {/* COLUMN 1 COMPARTMENT */}
                 <div className="flex flex-col">
-                  {/* Collapsible header on mobile, standard label on desktop */}
-                  <div className="flex justify-between items-center py-1 px-1.5 mb-1.5 rounded bg-zinc-950/45 border-l-2 border-amber-500">
-                    <span className="text-[9px] sm:text-xs font-serif font-black uppercase text-amber-400 tracking-wide">
-                      <span className="hidden xs:inline">Especialidades </span>Tradicionales
+                  {/* Category header - enlarged and without "Tradicionales" */}
+                  <div className="flex justify-between items-center py-1.5 px-2 mb-2 rounded bg-zinc-950/45 border-l-2 border-amber-500">
+                    <span className="text-[10px] xs:text-xs sm:text-sm font-serif font-black uppercase text-amber-400 tracking-wide">
+                      Especialidades
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-0.5 sm:gap-1">
+                  <div className="flex flex-col gap-1 sm:gap-1.5">
                     {col1Pizzas.map((pizza) => (
                       <div
                         key={pizza.id}
                         onMouseEnter={() => setHoveredPizza(pizza)}
                         onMouseLeave={() => setHoveredPizza(null)}
-                        className="group flex flex-col py-0.5 sm:py-1 px-1 sm:px-2 rounded hover:bg-zinc-950/30 transition-all duration-150 border border-transparent hover:border-zinc-800/40 relative cursor-help"
+                        className="group flex flex-col py-1.5 px-1.5 sm:px-2 rounded hover:bg-zinc-950/40 transition-all duration-150 border border-transparent hover:border-zinc-800/30 relative cursor-pointer"
                       >
-                        <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center justify-between gap-1.5">
                           {/* Pizza Dot Indicator */}
-                          <div className="flex items-center gap-1 sm:gap-1.5 overflow-hidden">
-                            <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-amber-500 shrink-0 group-hover:scale-120 group-hover:bg-red-500 transition-all"></span>
-                            <span className="text-[10px] sm:text-xs md:text-[13px] font-medium text-zinc-200 group-hover:text-white truncate">
+                          <div className="flex items-center gap-1.5 overflow-hidden">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0 group-hover:bg-red-500 transition-all"></span>
+                            <span className="text-[11.5px] xs:text-[13.5px] sm:text-[15px] md:text-base font-bold text-zinc-100 group-hover:text-white truncate">
                               {pizza.name}
                             </span>
                           </div>
                           {/* Dot lines connector */}
-                          <div className="flex-1 border-b border-dotted border-zinc-805/60 mx-1 group-hover:border-zinc-700/60"></div>
+                          <div className="flex-1 border-b border-dotted border-zinc-800/60 mx-1"></div>
                           {/* Price label */}
-                          <span className="text-[9.5px] sm:text-xs font-mono font-bold text-amber-500/90 group-hover:text-amber-400 tracking-tight shrink-0 bg-zinc-950/40 px-1 py-0.5 rounded border border-zinc-900">
+                          <span className="text-xs sm:text-sm font-mono font-black text-amber-450 group-hover:text-amber-450 tracking-tight shrink-0 bg-zinc-950/50 px-1.5 py-0.5 rounded border border-zinc-900 shadow-sm">
                             {formatCurrency(pizza.defaultPrice)}
                           </span>
                         </div>
-                        
-                        {/* Mobile inline ingredients showing or brief inline details */}
-                        <p className="text-[8.5px] sm:text-[10px] text-zinc-450 truncate mt-0.5 max-w-[95%] italic font-light leading-none">
-                          {pizza.ingredients}
-                        </p>
                       </div>
                     ))}
                     {col1Pizzas.length === 0 && (
@@ -484,41 +516,36 @@ export default function App() {
 
                 {/* COLUMN 2 COMPARTMENT */}
                 <div className="flex flex-col">
-                  {/* Collapsible header on mobile */}
-                  <div className="flex justify-between items-center py-1 px-1.5 mb-1.5 rounded bg-zinc-950/45 border-l-2 border-red-500">
-                    <span className="text-[9px] sm:text-xs font-serif font-black uppercase text-red-500 tracking-wide">
-                      <span className="hidden xs:inline">Gourmet y </span>Tradición
+                  {/* Category header - enlarged and without "Tradición" */}
+                  <div className="flex justify-between items-center py-1.5 px-2 mb-2 rounded bg-zinc-950/45 border-l-2 border-red-500">
+                    <span className="text-[10px] xs:text-xs sm:text-sm font-serif font-black uppercase text-red-500 tracking-wide">
+                      Variedades Gourmet
                     </span>
                   </div>
 
-                  <div className="flex flex-col gap-0.5 sm:gap-1">
+                  <div className="flex flex-col gap-1 sm:gap-1.5">
                     {col2Pizzas.map((pizza) => (
                       <div
                         key={pizza.id}
                         onMouseEnter={() => setHoveredPizza(pizza)}
                         onMouseLeave={() => setHoveredPizza(null)}
-                        className="group flex flex-col py-0.5 sm:py-1 px-1 sm:px-2 rounded hover:bg-zinc-950/30 transition-all duration-150 border border-transparent hover:border-zinc-800/40 relative cursor-help"
+                        className="group flex flex-col py-1.5 px-1.5 sm:px-2 rounded hover:bg-zinc-950/40 transition-all duration-150 border border-transparent hover:border-zinc-800/30 relative cursor-pointer"
                       >
-                        <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center justify-between gap-1.5">
                           {/* Pizza Dot Indicator */}
-                          <div className="flex items-center gap-1 sm:gap-1.5 overflow-hidden">
-                            <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-red-600 shrink-0 group-hover:scale-120 group-hover:bg-amber-500 transition-all"></span>
-                            <span className="text-[10px] sm:text-xs md:text-[13px] font-medium text-zinc-200 group-hover:text-white truncate">
+                          <div className="flex items-center gap-1.5 overflow-hidden">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-600 shrink-0 group-hover:bg-amber-500 transition-all"></span>
+                            <span className="text-[11.5px] xs:text-[13.5px] sm:text-[15px] md:text-base font-bold text-zinc-100 group-hover:text-white truncate">
                               {pizza.name}
                             </span>
                           </div>
                           {/* Dot lines connector */}
-                          <div className="flex-1 border-b border-dotted border-zinc-805/60 mx-1 group-hover:border-zinc-700/60"></div>
+                          <div className="flex-1 border-b border-dotted border-zinc-800/60 mx-1"></div>
                           {/* Price label */}
-                          <span className="text-[9.5px] sm:text-xs font-mono font-bold text-amber-500/90 group-hover:text-amber-400 tracking-tight shrink-0 bg-zinc-950/40 px-1 py-0.5 rounded border border-zinc-900">
+                          <span className="text-xs sm:text-sm font-mono font-black text-amber-450 group-hover:text-amber-450 tracking-tight shrink-0 bg-zinc-950/50 px-1.5 py-0.5 rounded border border-zinc-900 shadow-sm">
                             {formatCurrency(pizza.defaultPrice)}
                           </span>
                         </div>
-                        
-                        {/* Mobile inline ingredients showing */}
-                        <p className="text-[8.5px] sm:text-[10px] text-zinc-450 truncate mt-0.5 max-w-[95%] italic font-light leading-none">
-                          {pizza.ingredients}
-                        </p>
                       </div>
                     ))}
                     {col2Pizzas.length === 0 && (
@@ -700,6 +727,12 @@ export default function App() {
                       </div>
                     </div>
                   </div>
+
+                  {bookingFormError && (
+                    <div className="bg-red-950/40 border border-red-800/80 p-2.5 rounded-lg text-red-400 text-xs text-center font-bold">
+                      {bookingFormError}
+                    </div>
+                  )}
 
                   {/* Submission CTA Button */}
                   <button
@@ -964,15 +997,15 @@ export default function App() {
                     </h4>
                     {bookingList.length > 0 && (
                       <button 
-                        onClick={() => {
-                          if (confirm("¿Limpiar por completo el registro de reservas locales?")) {
-                            setBookingList([]);
-                            localStorage.setItem("rey_pizza_reservas", JSON.stringify([]));
-                          }
-                        }}
-                        className="text-[10px] text-red-500 hover:underline uppercase font-mono tracking-wider"
+                        type="button"
+                        onClick={handleClearAllBookings}
+                        className={`text-[10px] uppercase font-mono tracking-wider px-2.5 py-1 rounded transition-all duration-200 border ${
+                          isClearingAllBookings 
+                            ? "bg-red-950 text-red-400 border-red-700 font-black animate-pulse" 
+                            : "text-red-500 hover:underline border-transparent"
+                        }`}
                       >
-                        Limpiar todo
+                        {isClearingAllBookings ? "❌ ¿CONFIRMAR BORRADO?" : "Limpiar todo"}
                       </button>
                     )}
                   </div>
@@ -998,11 +1031,20 @@ export default function App() {
                             </div>
                           </div>
                           <button
+                            type="button"
                             onClick={() => handleDeleteBooking(book.id)}
-                            className="p-1.5 rounded bg-zinc-900 hover:bg-red-950/40 text-zinc-500 hover:text-red-500 border border-zinc-800 transition-all cursor-pointer"
-                            title="Eliminar registro"
+                            className={`p-1.5 px-2.5 rounded text-[10px] font-mono tracking-wide font-bold transition-all flex items-center gap-1 border ${
+                              deleteConfirmId === book.id
+                                ? "bg-red-950 text-red-400 border-red-800 animate-pulse"
+                                : "bg-zinc-900 hover:bg-red-950/40 text-zinc-500 hover:text-red-500 border-zinc-800"
+                            }`}
+                            title={deleteConfirmId === book.id ? "Clic de nuevo para confirmar" : "Eliminar reserva"}
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            {deleteConfirmId === book.id ? (
+                              "¿Seguro?"
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
                           </button>
                         </div>
                       ))}
